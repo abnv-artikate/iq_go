@@ -1,0 +1,92 @@
+{{template "layout.html" .}}
+
+{{define "title"}}Cognitive Test - Assessment{{end}}
+
+{{define "content"}}
+<div class="test-container">
+    <div class="test-header">
+        <div class="test-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-text" id="progressText">Question 1 of 50</span>
+        </div>
+        <div class="test-timer">
+            <i class="fas fa-clock"></i>
+            <span id="timer">00:00</span>
+        </div>
+    </div>
+
+    <div class="test-content">
+        <div class="question-card" id="questionCard">
+            <div class="question-category" id="questionCategory"></div>
+            <div class="question-text" id="questionText"></div>
+            <div class="question-display" id="questionDisplay" style="display: none;"></div>
+            <div class="question-options" id="questionOptions"></div>
+            <div class="question-input" id="questionInput" style="display: none;"></div>
+            <div class="question-timer" id="questionTimer"></div>
+        </div>
+
+        <div class="test-controls">
+            <button id="prevBtn" class="btn btn-secondary" onclick="previousQuestion()" disabled>
+                <i class="fas fa-arrow-left"></i>
+                Previous
+            </button>
+            <button id="nextBtn" class="btn btn-primary" onclick="nextQuestion()">
+                Next
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <button id="submitBtn" class="btn btn-success" onclick="submitTest()" style="display: none;">
+                <i class="fas fa-check"></i>
+                Submit Test
+            </button>
+        </div>
+    </div>
+
+    <div class="test-sidebar">
+        <div class="question-nav">
+            <h4>Questions</h4>
+            <div class="question-grid" id="questionGrid"></div>
+        </div>
+        
+        <div class="test-info">
+            <h4>Test Information</h4>
+            <div class="info-item">
+                <strong>Total Questions:</strong> 50
+            </div>
+            <div class="info-item">
+                <strong>Estimated Time:</strong> 45-60 minutes
+            </div>
+            <div class="info-item">
+                <strong>Categories:</strong>
+                <ul>
+                    <li>Analytical Reasoning (10)</li>
+                    <li>Working Memory (10)</li>
+                    <li>Processing Speed (10)</li>
+                    <li>Attention & Focus (10)</li>
+                    <li>Emotional Regulation (10)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="submitModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Submit Test</h3>
+        <p>Are you sure you want to submit your test? You cannot make changes after submission.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeSubmitModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmSubmit()">Submit</button>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/test.js"></script>
+<script>
+    // Initialize test
+    initializeTest();
+</script>
+{{end}}

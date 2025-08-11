@@ -1,0 +1,279 @@
+{{template "layout.html" .}}
+
+{{define "title"}}Test Results - Cognitive Assessment{{end}}
+
+{{define "content"}}
+<div class="results-container">
+    <div class="results-header">
+        <h1>Test Results</h1>
+        <p>View your cognitive assessment performance over time</p>
+    </div>
+
+    <div class="results-summary" id="resultsSummary">
+        <div class="summary-card">
+            <h3>Overall Performance</h3>
+            <div class="performance-metrics">
+                <div class="metric">
+                    <div class="metric-value" id="totalTests">0</div>
+                    <div class="metric-label">Tests Taken</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="bestScore">0%</div>
+                    <div class="metric-label">Best Score</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="avgScore">0%</div>
+                    <div class="metric-label">Average Score</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="improvement">0%</div>
+                    <div class="metric-label">Improvement</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-content">
+        <div class="results-list">
+            <div class="list-header">
+                <h3>All Results</h3>
+                <div class="list-controls">
+                    <select id="sortBy" onchange="sortResults()">
+                        <option value="date">Sort by Date</option>
+                        <option value="score">Sort by Score</option>
+                        <option value="time">Sort by Time</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="resultsTable" class="results-table">
+                <div class="table-header">
+                    <div class="col-date">Date</div>
+                    <div class="col-score">Score</div>
+                    <div class="col-time">Time</div>
+                    <div class="col-categories">Performance by Category</div>
+                    <div class="col-actions">Actions</div>
+                </div>
+                <div id="resultsBody" class="table-body">
+                    <div class="loading">Loading results...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="detailModal" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3>Test Result Details</h3>
+            <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+            <!-- Details will be loaded here -->
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    let allResults = [];
+    
+    // Load results on page load
+    loadResults();
+    
+    async function loadResults() {
+        try {
+            const response = await fetch('/api/results', {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                allResults = data.data || [];
+                updateResultsSummary();
+                displayResults();
+            } else {
+                document.getElementById('resultsBody').innerHTML = '<div class="no-results">Failed to load results</div>';
+            }
+        } catch (error) {
+            console.error('Error loading results:', error);
+            document.getElementById('resultsBody').innerHTML = '<div class="no-results">Error loading results</div>';
+        }
+    }
+    
+    function updateResultsSummary() {
+        if (allResults.length === 0) {
+            document.getElementById('resultsSummary').style.display = 'none';
+            return;
+        }
+        
+        const totalTests = allResults.length;
+        const scores = allResults.map(r => (r.score / r.total_questions) * 100);
+        const bestScore = Math.max(...scores);
+        const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+        
+        let improvement = 0;
+        if (allResults.length >= 2) {
+            const firstScore = (allResults[allResults.length - 1].score / allResults[allResults.length - 1].total_questions) * 100;
+            const lastScore = (allResults[0].score / allResults[0].total_questions) * 100;
+            improvement = lastScore - firstScore;
+        }
+        
+        document.getElementById('totalTests').textContent = totalTests;
+        document.getElementById('bestScore').textContent = Math.round(bestScore) + '%';
+        document.getElementById('avgScore').textContent = Math.round(avgScore) + '%';
+        document.getElementById('improvement').textContent = (improvement >= 0 ? '+' : '') + Math.round(improvement) + '%';
+    }
+    
+    function displayResults() {
+        const tbody = document.getElementById('resultsBody');
+        
+        if (allResults.length === 0) {
+            tbody.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h4>No test results yet</h4>
+                    <p>Take your first cognitive assessment to see results here.</p>
+                    <a href="/test" class="btn btn-primary">Start Test</a>
+                </div>
+            `;
+        
+        modal.style.display = 'block';
+    }
+    
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('detailModal');
+        if (event.target === modal) {
+            closeDetailModal();
+        }
+    }
+</script>
+{{end}}    return;
+        }
+        
+        tbody.innerHTML = allResults.map(result => {
+            const score = Math.round((result.score / result.total_questions) * 100);
+            const date = new Date(result.created_at).toLocaleDateString();
+            const time = Math.round(result.time_taken / 60);
+            const scoreClass = score >= 70 ? 'excellent' : score >= 50 ? 'good' : 'needs-improvement';
+            
+            return `
+                <div class="table-row">
+                    <div class="col-date">${date}</div>
+                    <div class="col-score">
+                        <span class="score-badge ${scoreClass}">${score}%</span>
+                        <small>${result.score}/${result.total_questions}</small>
+                    </div>
+                    <div class="col-time">${time} min</div>
+                    <div class="col-categories">
+                        <div class="category-bars">
+                            <!-- Category performance would be calculated here -->
+                            <div class="category-bar" style="width: ${score}%"></div>
+                        </div>
+                    </div>
+                    <div class="col-actions">
+                        <button class="btn btn-sm btn-outline" onclick="viewDetails(${result.id})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function sortResults() {
+        const sortBy = document.getElementById('sortBy').value;
+        
+        allResults.sort((a, b) => {
+            switch (sortBy) {
+                case 'score':
+                    return (b.score / b.total_questions) - (a.score / a.total_questions);
+                case 'time':
+                    return a.time_taken - b.time_taken;
+                case 'date':
+                default:
+                    return new Date(b.created_at) - new Date(a.created_at);
+            }
+        });
+        
+        displayResults();
+    }
+    
+    async function viewDetails(resultId) {
+        try {
+            const response = await fetch(`/api/results/${resultId}`, {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                showDetailModal(data.data);
+            }
+        } catch (error) {
+            console.error('Error loading result details:', error);
+        }
+    }
+    
+    function showDetailModal(result) {
+        const modal = document.getElementById('detailModal');
+        const body = document.getElementById('detailModalBody');
+        
+        const score = Math.round((result.score / result.total_questions) * 100);
+        const date = new Date(result.created_at).toLocaleDateString();
+        const time = Math.round(result.time_taken / 60);
+        
+        body.innerHTML = `
+            <div class="result-detail">
+                <div class="detail-header">
+                    <h4>Test taken on ${date}</h4>
+                    <div class="detail-score">${score}% (${result.score}/${result.total_questions})</div>
+                </div>
+                
+                <div class="detail-stats">
+                    <div class="stat">
+                        <label>Time Taken:</label>
+                        <span>${time} minutes</span>
+                    </div>
+                    <div class="stat">
+                        <label>Correct Answers:</label>
+                        <span>${result.score}</span>
+                    </div>
+                    <div class="stat">
+                        <label>Accuracy:</label>
+                        <span>${score}%</span>
+                    </div>
+                </div>
+                
+                <div class="answers-section">
+                    <h5>Answer Breakdown</h5>
+                    <div class="answers-list">
+                        ${result.answers ? result.answers.map((answer, index) => `
+                            <div class="answer-item ${answer.is_correct ? 'correct' : 'incorrect'}">
+                                <div class="answer-number">Q${index + 1}</div>
+                                <div class="answer-content">
+                                    <div class="answer-text">${answer.question?.question_text || 'Question text not available'}</div>
+                                    <div class="answer-response">
+                                        Your answer: <strong>${answer.user_answer}</strong>
+                                        ${answer.is_correct ? 
+                                            '<span class="correct-badge"><i class="fas fa-check"></i> Correct</span>' :
+                                            '<span class="incorrect-badge"><i class="fas fa-times"></i> Incorrect</span>'
+                                        }
+                                    </div>
+                                </div>
+                                <div class="answer-time">${answer.response_time}ms</div>
+                            </div>
+                        `).join('') : '<p>No detailed answers available</p>'}
+                    </div>
+                </div>
+            </div>
+        `;
