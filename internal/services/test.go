@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"iq-go/internal/handlers"
 	"iq-go/internal/models"
 
 	"gorm.io/gorm"
@@ -18,13 +17,19 @@ func NewTestService(db *gorm.DB) *TestService {
 	return &TestService{db: db}
 }
 
+type SubmitAnswerRequest struct {
+	QuestionID   uint   `json:"question_id" binding:"required"`
+	UserAnswer   string `json:"user_answer"`
+	ResponseTime int    `json:"response_time"`
+}
+
 func (s *TestService) GetQuestionsByTestID(testID uint) ([]models.Question, error) {
 	var questions []models.Question
 	err := s.db.Where("test_id = ?", testID).Order("order_index").Find(&questions).Error
 	return questions, err
 }
 
-func (s *TestService) SubmitTest(userID, testID uint, answers []handlers.SubmitAnswerRequest, timeTaken int) (*models.TestResult, error) {
+func (s *TestService) SubmitTest(userID, testID uint, answers []SubmitAnswerRequest, timeTaken int) (*models.TestResult, error) {
 	// Create test result
 	testResult := &models.TestResult{
 		UserID:         userID,

@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"net/http"
-	"strconv"
-
-	"iq-go/internal/models"
 	"iq-go/internal/services"
 	"iq-go/internal/utils"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -68,7 +66,17 @@ func (h *TestHandler) SubmitTest(c *gin.Context) {
 		return
 	}
 
-	result, err := h.testService.SubmitTest(userID.(uint), req.TestID, req.Answers, req.TimeTaken)
+	// Convert handlers types to services types
+	serviceAnswers := make([]services.SubmitAnswerRequest, len(req.Answers))
+	for i, answer := range req.Answers {
+		serviceAnswers[i] = services.SubmitAnswerRequest{
+			QuestionID:   answer.QuestionID,
+			UserAnswer:   answer.UserAnswer,
+			ResponseTime: answer.ResponseTime,
+		}
+	}
+
+	result, err := h.testService.SubmitTest(userID.(uint), req.TestID, serviceAnswers, req.TimeTaken)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to submit test")
 		return
