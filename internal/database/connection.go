@@ -1,7 +1,7 @@
 package database
 
 import (
-	"IQ_go/internal/models"
+	"iq-go/internal/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
